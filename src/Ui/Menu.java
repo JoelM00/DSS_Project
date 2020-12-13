@@ -34,7 +34,7 @@ public class Menu {
 
     public int lerOpcao() {
         int opcao;
-        System.out.println("Opção: ");
+        System.out.print("Opção: ");
         try {
             opcao = is.nextInt();
         } catch (InputMismatchException e) {

@@ -103,6 +103,10 @@ public class TextUi {
     public void trataConsulta() {
         try {
             List<Localizacao> res = this.modelo.consultaPrateleiras();
+            if (res.size()==0) {
+                System.out.println("Nao existem prateleiras ocupadas!");
+                return;
+            }
             for (Localizacao l : res) {
                 System.out.println(l.toString());
             }
