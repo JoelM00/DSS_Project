@@ -8,11 +8,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+/*
 public class PrateleiraDAO implements Map<String, Prateleira> {
     private static PrateleiraDAO singleton = null;
 
     private PrateleiraDAO() {
-        try (Connection com = DriverManager.getConnection(ConfigDAO.URL,ConfigDAO.DATABASE,ConfigDAO.CREDENTIALS)) {
+        try (Connection com = ConfigDAO.connect()) {
             Statement stm = com.createStatement();
 
             stm.executeUpdate("create table Prateleira (" +
@@ -36,7 +37,7 @@ public class PrateleiraDAO implements Map<String, Prateleira> {
     @Override
     public int size() {
         int size = 0;
-        try (Connection com = DriverManager.getConnection(ConfigDAO.URL,ConfigDAO.DATABASE,ConfigDAO.CREDENTIALS)) {
+        try (Connection com = ConfigDAO.connect()) {
             Statement stm = com.createStatement();
 
             ResultSet rset = stm.executeQuery("select count(*) from Prateleira");
@@ -57,7 +58,7 @@ public class PrateleiraDAO implements Map<String, Prateleira> {
     @Override
     public boolean containsKey(Object key) {
         boolean res = false;
-        try (Connection com = DriverManager.getConnection(ConfigDAO.URL,ConfigDAO.DATABASE,ConfigDAO.CREDENTIALS)) {
+        try (Connection com = ConfigDAO.connect()) {
             Statement stm = com.createStatement();
 
             ResultSet rset = stm.executeQuery("select Codigo from Prateleiras where Codigo = '"+ key.toString()+"'");
@@ -80,7 +81,7 @@ public class PrateleiraDAO implements Map<String, Prateleira> {
     @Override
     public Prateleira get(Object key) {
         Prateleira p = null;
-        try (Connection com = DriverManager.getConnection(ConfigDAO.URL,ConfigDAO.DATABASE,ConfigDAO.CREDENTIALS)) {
+        try (Connection com = ConfigDAO.connect()) {
             Statement stm = com.createStatement();
 
             ResultSet rset = stm.executeQuery("select * from Prateleira where Codigo ='"+key.toString()+"'");
@@ -94,24 +95,21 @@ public class PrateleiraDAO implements Map<String, Prateleira> {
                 }
 
 
-             }*/
-
-
+             }
+/*
         } catch (Exception e) {
             e.printStackTrace();
         }
         return p;
     }
 
-    @Override
     public Prateleira put(String key, Prateleira value) {
         return null;
     }
-
-    @Override
+*//*
     public Prateleira remove(Object key) {
         Prateleira p = this.get(key);
-        try (Connection conn = DriverManager.getConnection(ConfigDAO.URL, ConfigDAO.USERNAME, ConfigDAO.PASSWORD)) {
+        try (Connection conn =ConfigDAO.connect()) {
              Statement stm = conn.createStatement();
 
              stm.executeUpdate("DELETE FROM Prateleira WHERE Id='"+key+"'");
@@ -132,7 +130,7 @@ public class PrateleiraDAO implements Map<String, Prateleira> {
 
     @Override
     public void clear() {
-        try (Connection conn = DriverManager.getConnection(ConfigDAO.URL, ConfigDAO.USERNAME, ConfigDAO.PASSWORD)) {
+        try (Connection conn = ConfigDAO.connect()) {
              Statement stm = conn.createStatement();
             stm.executeUpdate("TRUNCATE Prateleira");
         } catch (SQLException e) {
@@ -150,7 +148,7 @@ public class PrateleiraDAO implements Map<String, Prateleira> {
     @Override
     public Collection<Prateleira> values() {
         Collection<Prateleira> res = new HashSet<>();
-        try (Connection conn = DriverManager.getConnection(ConfigDAO.URL, ConfigDAO.USERNAME, ConfigDAO.PASSWORD);
+        try (Connection conn = ConfigDAO.connect();
              Statement stm = conn.createStatement();
              ResultSet rs = stm.executeQuery("SELECT Codigo FROM Prateleira")) {
             while (rs.next()) {
@@ -170,4 +168,6 @@ public class PrateleiraDAO implements Map<String, Prateleira> {
     public Set<Entry<String, Prateleira>> entrySet() {
         return null;
     }
+
 }
+*/

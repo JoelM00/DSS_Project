@@ -1,24 +1,20 @@
 package Business;
 
-import Data.PaleteDAO;
-import Data.PrateleiraDAO;
-
 import java.util.*;
 
 public class GestArmazemFacade implements IGestArmazemFacade {
     private Robot robot;
-    private Map<String,Prateleira> prateleiras;
     private Map<String,Palete> paletes;
     private Queue<String> paletesAtransportar;
     private Mapa mapa;
     private Leitor leitor;
 
     public GestArmazemFacade() {
-        this.robot = new Robot("1",true,null,null,new Localizacao(null,0));
+        this.robot = new Robot("1",true,null,null,new CorredorSemArmazenamento(0));
         this.paletes = new HashMap<>();
-        this.prateleiras = new HashMap<>();
         this.paletesAtransportar = new ArrayDeque<>();
         this.leitor = new Leitor();
+        this.mapa = new Mapa();
     }
 
     public void atualizaLocalizacaoPalete(String codigo,Localizacao loc) {
@@ -54,7 +50,7 @@ public class GestArmazemFacade implements IGestArmazemFacade {
         this.robot.setPercuso(null);
     }
 
-    public void adicionaPaleteRobot(String codigo,Palete palete) {
+    public void adicionaPaleteRobot(String palete) {
         this.robot.setPalete(palete);
     }
 
@@ -74,56 +70,84 @@ public class GestArmazemFacade implements IGestArmazemFacade {
         this.robot.setDisponivel(b);
     }
 
-        public List<Localizacao> consultaPrateleiras() {
-        List<Localizacao> res = new ArrayList<>();
-        for (Prateleira p : this.prateleiras.values()) {
-            if (p.getDisponivel()) {
-                res.add(p.getLoc());
-            }
-        }
-        return res;
+    public List<Posicao> consultaPrateleiras() {
+        return this.mapa.listagem();
     }
 
     public Localizacao procuraPrateleiraDisponivel() {
-        for (Prateleira p : this.prateleiras.values()) {
-            if (p.getDisponivel()) {
-                p.setDisponivel(false);
-                return p.getLoc();
-            }
+        //return this.mapa.procuraPrateleiraDisponivel();
+        return null;
+    }
+
+    public boolean existemPaletesAtransportar() {
+        return this.paletesAtransportar.size() > 0;
+    }
+
+
+    public String iniciaTransportePalete() {
+        if (this.robot.getDisponivel()) {
+            String palete = this.paletesAtransportar.remove();
+            Percurso p = this.mapa.calculaPercurso(this.robot.getLoc(), this.paletes.get(palete).getLoc());
+
+            this.robot.setDisponivel(false);
+            this.robot.setPalete(palete);
+            this.robot.setPercuso(p);
+            this.robot.movimenta();
+            return palete;
         }
         return null;
     }
 
-    public String iniciaTransportePalete() {
-        String palete = this.paletesAtransportar.remove();
-        Percurso p = this.mapa.calculaPercusoArmazenamento(this.robot.getLoc(),this.paletes.get(palete).getLoc());
 
-        this.robot.setDisponivel(false);
-        this.robot.setPercuso(p);
-        this.robot.movimenta();
-        return palete;
+    public int transportaPalete(String palete) {
+        if (this.robot.getPalete()==null) return -1;
+
+        if (this.robot.getPalete().equals(palete)) {
+
+            String codigo = this.mapa.procuraPrateleira();
+
+            Localizacao dest = this.mapa.reservaPrateleiraPorCodigo(codigo);
+
+            Percurso p = this.mapa.calculaPercurso(this.robot.getLoc(),dest);
+
+            Palete pal = this.paletes.get(palete);
+
+            if (pal!=null) {
+                this.paletes.get(palete).setLoc(this.robot.getLoc());
+                this.robot.setPercuso(p);
+                this.robot.movimenta();
+                return 1;
+            }
+        }
+        return 0;
     }
 
+    public int concluiTransportePalete(String palete) {
+        if (this.robot.getPalete()==null) return -1;
 
-    public void transportaPalete(String palete) {
-        Localizacao dest = this.procuraPrateleiraDisponivel();
-
-        Percurso p = this.mapa.calculaPercusoArmazenamento(this.robot.getLoc(),dest);
-
-        this.robot.setPercuso(p);
-        this.robot.movimenta();
-    }
-
-    public void concluiTransportePalete(String palete) {
-        this.paletes.get(palete).setDisponivel(true);
-        this.robot.setDisponivel(true);
+        if (this.robot.getPalete().equals(palete)) {
+            Palete p = this.paletes.get(palete);
+            p.setLoc(this.robot.getLoc());
+            p.setDisponivel(true);
+            this.robot.setDisponivel(true);
+            return 1;
+        }
+        return 0;
     }
 
     public void leitorRegisto(String codigo,float altura) {
         Palete p = this.leitor.regista(codigo,altura);
         this.paletes.put(p.getCodigo(),p);
         this.paletesAtransportar.add(p.getCodigo());
-
     }
 
+    public void mostra() {
+        for (Palete p : this.paletes.values()) {
+            System.out.println(p.toString());
+        }
+    }
+
+    public void mostraRobot() {
+        System.out.println(this.robot.toString());
+    }
 }

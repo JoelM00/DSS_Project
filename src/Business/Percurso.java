@@ -16,4 +16,11 @@ public class Percurso {
     public void setPercurso(Queue<Localizacao> percurso) {
         this.percurso = percurso;
     }
+
+    @Override
+    public String toString() {
+        return "Percurso{" +
+                "percurso=" + percurso +
+                '}';
+    }
 }

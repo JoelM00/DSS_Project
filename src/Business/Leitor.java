@@ -1,8 +1,8 @@
 package Business;
 
 public class Leitor {
+    public Leitor() {}
     public Palete regista(String codigo,Float altura) {
-        return new Palete(codigo,altura,new Localizacao(null,0),false);
-
+        return new Palete(codigo,altura,new Posicao(),false);
     }
 }

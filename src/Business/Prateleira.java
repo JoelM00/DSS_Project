@@ -3,13 +3,11 @@ package Business;
 public class Prateleira {
     private String codigo;
     private float altura;
-    private Localizacao loc;
     private boolean disponivel;
 
-    public Prateleira(String codigo,float altura, Localizacao loc,boolean disponivel) {
+    public Prateleira(String codigo,float altura,boolean disponivel) {
         this.codigo = codigo;
         this.altura = altura;
-        this.loc = loc;
         this.disponivel = disponivel;
     }
 
@@ -27,14 +25,6 @@ public class Prateleira {
 
     public void setAltura(float altura) {
         this.altura = altura;
-    }
-
-    public Localizacao getLoc() {
-        return loc;
-    }
-
-    public void setLoc(Localizacao loc) {
-        this.loc = loc;
     }
 
     public boolean getDisponivel() {

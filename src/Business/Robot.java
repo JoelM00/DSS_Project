@@ -1,16 +1,15 @@
 package Business;
 
-import java.util.List;
 import java.util.Queue;
 
 public class Robot {
     private String codigo;
     private boolean disponivel;
-    private Palete palete;
+    private String palete;
     private Percurso percuso;
     private Localizacao loc;
 
-    public Robot(String codigo, boolean disponivel, Palete palete,Percurso percurso,Localizacao loc) {
+    public Robot(String codigo, boolean disponivel,String palete,Percurso percurso,Localizacao loc) {
         this.codigo = codigo;
         this.disponivel = disponivel;
         this.palete = palete;
@@ -34,11 +33,11 @@ public class Robot {
         this.disponivel = disponivel;
     }
 
-    public Palete getPalete() {
+    public String getPalete() {
         return palete;
     }
 
-    public void setPalete(Palete palete) {
+    public void setPalete(String palete) {
         this.palete = palete;
     }
 
@@ -61,13 +60,19 @@ public class Robot {
     public void movimenta() {
         Queue<Localizacao> p = this.percuso.getPercurso();
 
-        int size = p.size();
-
-        for (int i = 0; i<size-1; i++) {
-            p.remove();
+        for (int i = 0; i<p.size(); i++) {
+            this.loc = p.remove();
         }
-
-        this.loc = p.remove();
     }
 
+    @Override
+    public String toString() {
+        return "Robot{" +
+                "codigo='" + codigo + '\'' +
+                ", disponivel=" + disponivel +
+                ", palete='" + palete + '\'' +
+                ", percuso=" + percuso +
+                ", loc=" + loc +
+                '}';
+    }
 }

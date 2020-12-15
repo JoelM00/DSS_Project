@@ -23,7 +23,7 @@ public class Menu {
     }
 
     public void showMenu() {
-        System.out.println("########### Menu ###########");
+        System.out.println("\n########### Menu ###########");
         for (int i = 0; i<this.opcoes.size(); i++) {
             System.out.print(i+1);
             System.out.print(" - ");

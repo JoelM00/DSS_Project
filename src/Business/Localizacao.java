@@ -1,31 +1,19 @@
 package Business;
 
-public class Localizacao {
-    private Corredor corredor;
-    private int seccao;
+public abstract class Localizacao {
+    private int numero;
 
-    public Localizacao(Corredor corredor,int seccao) {
-        this.corredor = corredor;
-        this.seccao = seccao;
+    protected Localizacao(int numero) {
+        this.numero = numero;
     }
 
-    public Corredor getCorredor() {
-        return corredor;
+    public int getNumero() {
+        return numero;
     }
 
-    public void setCorredor(Corredor corredor) {
-        this.corredor = corredor;
+    public void setNumero(int numero) {
+        this.numero = numero;
     }
 
-    public int getSeccao() {
-        return seccao;
-    }
-
-    public void setSeccao(int seccao) {
-        this.seccao = seccao;
-    }
-
-    public String toString() {
-        return "Corredor numero: "+this.corredor.getNumero() + "Seccao numero: "+this.seccao;
-    }
+    public abstract String toString();
 }

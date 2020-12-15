@@ -29,11 +29,6 @@ public class Palete {
         this.disponivel = disponivel;
     }
 
-    public Palete(float altura, Localizacao loc) {
-        this.altura = altura;
-        this.loc = loc;
-    }
-
     public float getAltura() {
         return altura;
     }
@@ -48,5 +43,15 @@ public class Palete {
 
     public void setLoc(Localizacao loc) {
         this.loc = loc;
+    }
+
+    @Override
+    public String toString() {
+        return "Palete{" +
+                "codigo='" + codigo + '\'' +
+                ", altura=" + altura +
+                ", loc=" + loc.toString() +
+                ", disponivel=" + disponivel +
+                '}';
     }
 }
