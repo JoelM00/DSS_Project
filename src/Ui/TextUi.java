@@ -7,66 +7,98 @@ import java.util.List;
 import java.util.Scanner;
 
 public class TextUi {
-    private IGestArmazemFacade modelo;
-    private Menu menu;
-    private Scanner scin;
+    private final IGestArmazemFacade modelo;
+    private final Scanner scin;
 
     public TextUi() {
-        String[] opcoes = {
-                "Registar palete no Sistema.",
-                "Preparar transporte de uma palete.",
-                "Notificar recolha da palete.",
-                "Notificar entrega da palete.",
-                "Consultar listagem de localizacoes."};
-        this.menu = new Menu(opcoes);
         this.modelo = new GestArmazemFacade();
         this.scin = new Scanner(System.in);
     }
 
     public void run() {
-        do {
-            menu.executa();
-            switch (menu.getEscolha()) {
-                case 1:
-                    this.trataComunicacao();
-                    break;
-                case 2:
-                    this.trataPreparacao();
-                    break;
-                case 3:
-                    this.trataRecolha();
-                    break;
-                case 4:
-                    this.trataEntrega();
-                    break;
-                case 5:
-                    this.trataConsulta();
-                    break;
-            }
-        } while (menu.getEscolha()!=0);
-        System.out.println("Encerrando...");
+        System.out.println("Bem vindo ao Gestor de Armazém!");
+        this.menuPrincipal();
+        System.out.println("A sair...");
     }
 
-    public void trataComunicacao() {
+    private void menuPrincipal() {
+        Menu menu = new Menu(new String[] {
+                "Operações do Leitor.",
+                "Operações do Sistema.",
+                "Operações do Robot.",
+                "Operações do Gestor. "
+        });
+
+        menu.setPreCondicao(2, this.modelo::existemPaletesAtransportar);
+        menu.setPreCondicao(3, this.modelo::existeAlgumRobotIndisponivel);
+
+        menu.setHandler(1,this::gestorDoLeitor);
+        menu.setHandler(2,this::gestorDoSistema);
+        menu.setHandler(3,this::gestorDoRobot);
+        menu.setHandler(4,this::gestorDoGestor);
+        menu.run();
+    }
+
+    private void gestorDoLeitor() {
+        Menu menu = new Menu(new String[] {"Registar palete."});
+
+        menu.setHandler(1,this::trataRegisto);
+        menu.run();
+    }
+
+    public void gestorDoSistema() {
+        Menu menu = new Menu(new String[] {"Preparar transporte de palete."});
+
+        menu.setPreCondicao(1, this.modelo::existemPaletesATransportar);
+        menu.setHandler(1,this::trataPreparacao);
+        menu.run();
+    }
+
+    public void gestorDoRobot() {
+        Menu menu = new Menu(new String[] {"" +
+                "Notificar recolha da palete.",
+                "Notificar entrega da palete."
+        });
+
+        menu.setHandler(1,this::trataRecolha);
+        menu.setHandler(2,this::trataEntrega);
+        menu.run();
+    }
+
+    public void gestorDoGestor() {
+        Menu menu = new Menu(new String[] {"Consultar listagem de localizações ocupadas."});
+
+        menu.setHandler(1,this::trataConsulta);
+        menu.run();
+    }
+
+    public void trataRegisto() {
         try {
+            /* Lê código da palete a registar no sistema */
             System.out.print("Codigo da palete: ");
             String codigo = this.scin.nextLine();
 
             if (!this.modelo.verificaExistenciaPalete(codigo)) {
 
+                /* Lê altura da palete a registar no sistema */
                 System.out.print("Altura da palete: ");
                 float altura = this.scin.nextFloat();
+
+                /* Cria registo de palete no sistema e adiciona-a a paletes a transportar*/
                 this.modelo.leitorRegisto(codigo,altura);
 
-                System.out.println(" -> Palete registada no sistema.");
-                System.out.println(" -> Palete adcicionada na lista de paletes a transportar.");
+                System.out.println(" -> Palete registada no sistema com sucesso.");
+                System.out.println(" -> Palete adcicionada à lista de paletes a transportar.");
                 this.scin.nextLine();
 
             } else {
-                System.out.println(" -> Codigo ja existente!");
+                System.out.println(" -> Código de palete já existente!");
             }
+            /* Exibe todas as paletes registadas atualmente no sistema */
             this.modelo.mostra();
+            /* Exibe o robot existente no sistema */
             this.modelo.mostraRobot();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -74,18 +106,19 @@ public class TextUi {
 
     public void trataPreparacao() {
         try {
-            if (!this.modelo.existemPaletesAtransportar()) {
-                System.out.println(" -> Nao existem paletes a serem transportadas!");
-                return;
-            }
-            String pal = this.modelo.iniciaTransportePalete();
-            if (pal==null) {
-                System.out.println(" -> O robot esta indisponivel!");
+            String palete = this.modelo.iniciaTransportePalete();
+
+            if (palete==null) {
+                System.out.println(" -> O robot está indisponível!");
             } else {
-                System.out.println(" -> Robot notificado! ");
-                System.out.println(" -> Palete selecionada: "+pal);
+                String robot = this.modelo.iniciaTransporteRobot(palete);
+
+                System.out.println(" -> Robot selecionado: "+robot);
+                System.out.println(" -> Palete selecionada: " + palete);
             }
+            /* Exibe todas as paletes registadas atualmente no sistema */
             this.modelo.mostra();
+            /* Exibe o robot existente no sistema */
             this.modelo.mostraRobot();
 
         } catch (Exception e) {
@@ -95,20 +128,24 @@ public class TextUi {
 
     public void trataRecolha() {
         try {
-            System.out.print("Codigo da palete: ");
-            String cod = this.scin.nextLine();
-            switch (this.modelo.transportaPalete(cod)) {
-                case -1:
-                    System.out.println(" -> O robot nao iniciou o transporte!");
-                    break;
-                case 0:
-                    System.out.println(" -> Codigo introduzido nao referencia palete em transporte!");
-                    break;
-                case 1:
-                    System.out.println(" -> Palete recolhida!");
-                    break;
+            System.out.print("Indique o seu codigo: ");
+            String codigo = this.scin.nextLine();
+
+            if (!this.modelo.existeRobot(codigo)) {
+                System.out.println("Codigo errado!");
+                return;
             }
+
+            /* see this case here */
+            switch (this.modelo.transportaPalete(codigo)) {
+                case -2 -> System.out.println(" -> O armazem esta cheio!");
+                case -1 -> System.out.println(" -> O robot não tem paletes a recolher!");
+                case 0  -> System.out.println(" -> Codigo introduzido não referencia palete à espera de transporte!");
+                case 1  -> System.out.println(" -> Palete recolhida e transportada com sucesso!");
+            }
+            /* Exibe todas as paletes registadas atualmente no sistema */
             this.modelo.mostra();
+            /* Exibe o robot existente no sistema */
             this.modelo.mostraRobot();
 
         } catch (Exception e) {
@@ -118,21 +155,20 @@ public class TextUi {
 
     public void trataEntrega() {
         try {
-            System.out.print("Codigo da palete: ");
-            String cod = this.scin.nextLine();
-            switch (this.modelo.concluiTransportePalete(cod)) {
-                case -1:
-                    System.out.println(" -> O robot nao iniciou o transporte!");
-                    break;
-                case 0:
-                    System.out.println(" -> Codigo introduzido nao referencia palete em transporte!");
-                    break;
-                case 1:
-                    System.out.println(" -> Palete entregue!");
-                    break;
+            System.out.print("Indique o seu codigo: ");
+            String codigo = this.scin.nextLine();
+
+            switch (this.modelo.concluiTransportePalete(codigo)) {
+                case -1 -> System.out.println(" -> O robot não tem paletes a entregar!");
+                case 0  -> System.out.println(" -> Codigo introduzido nao referencia palete em transporte!");
+                case 1  -> System.out.println(" -> Palete entregue!");
             }
+
+            /* Exibe todas as paletes registadas atualmente no sistema */
             this.modelo.mostra();
+            /* Exibe o robot existente no sistema */
             this.modelo.mostraRobot();
+
 
         } catch (Exception e) {
             e.printStackTrace();

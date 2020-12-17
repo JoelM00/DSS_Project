@@ -4,22 +4,31 @@ import java.util.List;
 
 public interface IGestArmazemFacade {
 
-    public List<Posicao> consultaPrateleiras();
+    List<Posicao> consultaPrateleiras();
 
-    public boolean verificaExistenciaPalete(String codigo);
+    boolean verificaExistenciaPalete(String codigo);
 
-    public void leitorRegisto(String codigo, float altura);
+    void leitorRegisto(String codigo, float altura);
 
-    public String iniciaTransportePalete();
+    String iniciaTransportePalete();
 
-    public int transportaPalete(String palete);
+    public String iniciaTransporteRobot(String palete);
 
-    public int concluiTransportePalete(String palete);
+    int transportaPalete(String codigo);
 
-    public boolean existemPaletesAtransportar();
+    int concluiTransportePalete(String codigo);
 
-    public void mostra();
+    boolean existemPaletesAtransportar();
 
-    public void mostraRobot();
+    String verificaDisponibilidadeRobot();
 
+    void mostra();
+
+    void mostraRobot();
+
+    public boolean existeAlgumRobotIndisponivel();
+
+    public boolean existeRobot(String codigo);
+
+    public boolean existemPaletesATransportar();
 }

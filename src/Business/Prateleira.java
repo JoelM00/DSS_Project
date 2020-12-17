@@ -15,6 +15,20 @@ public class Prateleira {
         return codigo;
     }
 
+    public boolean getDisponivel() {
+        return disponivel;
+    }
+
+    public void setDisponivel(boolean disponivel) {
+        this.disponivel = disponivel;
+    }
+
+    public Prateleira clone() {
+        return new Prateleira(this.codigo,this.altura,this.disponivel);
+    }
+
+    /* MÉTODOS NÃO USADOS MAS QUE PODEM (OU NÃO) FAZER FALTA */
+
     public void setCodigo(String codigo) {
         this.codigo = codigo;
     }
@@ -25,13 +39,5 @@ public class Prateleira {
 
     public void setAltura(float altura) {
         this.altura = altura;
-    }
-
-    public boolean getDisponivel() {
-        return disponivel;
-    }
-
-    public void setDisponivel(boolean disponivel) {
-        this.disponivel = disponivel;
     }
 }

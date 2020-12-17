@@ -1,55 +1,83 @@
 package Ui;
 
-import java.util.Arrays;
-import java.util.InputMismatchException;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 public class Menu {
-    private static Scanner is = new Scanner(System.in);
-    private List<String> opcoes;
-    private int escolha;
+    public interface MenuHandler {
+        void executa();
+    }
+
+    public interface MenuPreCondicao {
+        boolean valida();
+    }
+
+    private static final Scanner is = new Scanner(System.in);
+
+    private final List<String> opcoes;
+    private final List<MenuPreCondicao> disponivel;
+    private final List<MenuHandler> handlers;
 
     public Menu(String[] opcoes) {
+
         this.opcoes = Arrays.asList(opcoes);
-        this.escolha = 0;
+        this.disponivel = new ArrayList<>();
+        this.handlers = new ArrayList<>();
+
+        this.opcoes.forEach(s -> {
+            this.disponivel.add(() -> true); // preCondiciona todas as opções com true
+            this.handlers.add(() -> System.out.println("Ainda não está implementada!"));
+        });
     }
 
-    public void executa() {
+    public void run() {
+        int opcao;
+
         do {
-            showMenu();
-            this.escolha = lerOpcao();
-        } while (this.escolha == -1);
+            mostra();
+            opcao = lerOpcao();
+            if (opcao > 0 && !this.disponivel.get(opcao - 1).valida()) {
+                System.out.println("Opção indisponiíel!");
+            } else if (opcao > 0) {
+                this.handlers.get(opcao - 1).executa();
+            }
+        } while (opcao != 0);
     }
 
-    public void showMenu() {
+    public void setPreCondicao(int opcao,MenuPreCondicao m) {
+        this.disponivel.set(opcao - 1,m);
+    }
+
+    public void setHandler(int opcao,MenuHandler m) {
+        this.handlers.set(opcao - 1,m);
+    }
+
+    private void mostra() {
         System.out.println("\n########### Menu ###########");
+
         for (int i = 0; i<this.opcoes.size(); i++) {
             System.out.print(i+1);
             System.out.print(" - ");
-            System.out.println(this.opcoes.get(i));
+            System.out.println(this.disponivel.get(i).valida() ? this.opcoes.get(i) : "----------");
         }
         System.out.println("0 - Sair");
     }
 
-    public int lerOpcao() {
+    private int lerOpcao() {
         int opcao;
         System.out.print("Opção: ");
+
         try {
-            opcao = is.nextInt();
-        } catch (InputMismatchException e) {
+            String linha = is.nextLine();
+            opcao = Integer.parseInt(linha);
+
+        } catch (NumberFormatException e) {
             opcao = -1;
-            System.out.println(e.toString());
         }
+
         if (opcao < 0 || opcao > this.opcoes.size()) {
             System.out.println("Opção invalida!!");
             opcao = -1;
         }
         return opcao;
     }
-
-    public int getEscolha() {
-        return this.escolha;
-    }
-
 }

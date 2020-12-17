@@ -6,6 +6,7 @@ public class Robot {
     private String codigo;
     private boolean disponivel;
     private String palete;
+    private boolean recolheuPalete;
     private Percurso percuso;
     private Localizacao loc;
 
@@ -13,16 +14,9 @@ public class Robot {
         this.codigo = codigo;
         this.disponivel = disponivel;
         this.palete = palete;
+        this.recolheuPalete = false;
         this.percuso = percurso;
         this.loc = loc;
-    }
-
-    public String getCodigo() {
-        return codigo;
-    }
-
-    public void setCodigo(String codigo) {
-        this.codigo = codigo;
     }
 
     public boolean getDisponivel() {
@@ -41,8 +35,12 @@ public class Robot {
         this.palete = palete;
     }
 
-    public Percurso getPercuso() {
-        return percuso;
+    public void setRecolheuPalete(boolean state) {
+        this.recolheuPalete = state;
+    }
+
+    public boolean getRecolheuPalete() {
+        return this.recolheuPalete;
     }
 
     public void setPercuso(Percurso percuso) {
@@ -53,26 +51,45 @@ public class Robot {
         return loc;
     }
 
-    public void setLoc(Localizacao loc) {
-        this.loc = loc;
-    }
-
     public void movimenta() {
+
         Queue<Localizacao> p = this.percuso.getPercurso();
 
-        for (int i = 0; i<p.size(); i++) {
+        while (p.size()>0) {
             this.loc = p.remove();
+            System.out.println("A percorrer -> " + this.loc.toString());
+            try {
+                Thread.sleep(1000);
+            } catch (Exception ignored) {}
         }
     }
 
     @Override
     public String toString() {
-        return "Robot{" +
-                "codigo='" + codigo + '\'' +
-                ", disponivel=" + disponivel +
-                ", palete='" + palete + '\'' +
-                ", percuso=" + percuso +
-                ", loc=" + loc +
-                '}';
+        return "Robot { "
+                + "código = '" + codigo + '\''
+                + ", disponivel = " + disponivel
+                + ", palete = '" + palete + '\''
+                + ", percuso = " + percuso
+                + ", localização = " + loc
+                + '}';
+    }
+
+    /* MÉTODOS NÃO USADOS MAS QUE PODEM (OU NÃO) FAZER FALTA */
+
+    public String getCodigo() {
+        return codigo;
+    }
+
+    public void setCodigo(String codigo) {
+        this.codigo = codigo;
+    }
+
+    public Percurso getPercuso() {
+        return percuso;
+    }
+
+    public void setLoc(Localizacao loc) {
+        this.loc = loc;
     }
 }

@@ -3,151 +3,177 @@ package Business;
 import java.util.*;
 
 public class GestArmazemFacade implements IGestArmazemFacade {
-    private Robot robot;
+    private Map<String,Robot> robots;
     private Map<String,Palete> paletes;
     private Queue<String> paletesAtransportar;
-    private Mapa mapa;
-    private Leitor leitor;
+    private final Mapa mapa;
+    private final Leitor leitor;
+
+    private void criaRobots() {
+        for (int i = 0; i<3; i++) {
+            String codigo = "R"+(i+1);
+            this.robots.put(codigo,new Robot(codigo,true,null,null, new Posicao(0,0)));
+        }
+    }
 
     public GestArmazemFacade() {
-        this.robot = new Robot("1",true,null,null,new CorredorSemArmazenamento(0));
+        this.robots = new HashMap<>();
         this.paletes = new HashMap<>();
         this.paletesAtransportar = new ArrayDeque<>();
         this.leitor = new Leitor();
         this.mapa = new Mapa();
-    }
-
-    public void atualizaLocalizacaoPalete(String codigo,Localizacao loc) {
-        this.paletes.get(codigo).setLoc(loc);
-    }
-
-    public void adicionaPalete(Palete palete) {
-        this.paletes.put(palete.getCodigo(),palete);
-    }
-
-    public void removePaleteAtransportar(String codigo) {
-        this.paletesAtransportar.remove(codigo);
-    }
-
-    public void adcicionaPaleteAtransportar(String palete) {
-        this.paletesAtransportar.add(palete);
-    }
-
-    public void atualizaDisponibilidadePalete(String codigo,boolean b) {
-        this.paletes.get(codigo).setDisponivel(b);
-    }
-
-    public void removePalete(String codigo) {
-        this.paletesAtransportar.remove(codigo);
-        this.paletes.remove(codigo);
-    }
-
-    public void adicionaPercurso(String codigo, Percurso percurso) {
-        this.robot.setPercuso(percurso);
-    }
-
-    public void removePercurso(String codigo) {
-        this.robot.setPercuso(null);
-    }
-
-    public void adicionaPaleteRobot(String palete) {
-        this.robot.setPalete(palete);
-    }
-
-    public void removePaleteRobot(String codigo) {
-        this.robot.setPalete(null);
-    }
-
-    public boolean verificaDisponibilidade(String codigo) {
-        return this.robot.getDisponivel();
+        this.criaRobots();
     }
 
     public boolean verificaExistenciaPalete(String codigo) {
         return !(this.paletes.get(codigo) == null);
     }
 
-    public void atualizaDisponibilidade(String codigo,boolean b) {
-        this.robot.setDisponivel(b);
-    }
-
     public List<Posicao> consultaPrateleiras() {
-        return this.mapa.listagem();
-    }
 
-    public Localizacao procuraPrateleiraDisponivel() {
-        //return this.mapa.procuraPrateleiraDisponivel();
-        return null;
+        List<Posicao> aux = new ArrayList<>();
+
+        for(Posicao p : this.mapa.listagem())
+            aux.add(p.clone());
+
+        return aux;
     }
 
     public boolean existemPaletesAtransportar() {
         return this.paletesAtransportar.size() > 0;
     }
 
+    public String algumRobotDisponivel() {
+        for (Robot r : this.robots.values()) {
+            if (r.getDisponivel()) return r.getCodigo();
+        }
+        return null;
+    }
+
+    public String verificaDisponibilidadeRobot() {
+        return this.algumRobotDisponivel();
+    }
+
+    public boolean existeAlgumRobotIndisponivel() {
+        for (Robot r : this.robots.values()) {
+            if (!r.getDisponivel()) return true;
+        }
+        return false;
+    }
+
+    public boolean existeRobot(String codigo) {
+        return this.robots.get(codigo)!=null;
+    }
+
+    public boolean existemPaletesATransportar() {
+        return this.paletesAtransportar.size() > 0;
+    }
+
+    public String iniciaTransporteRobot(String palete) {
+        String robot = this.verificaDisponibilidadeRobot();
+
+        if (robot!=null) {
+
+            Robot r = this.robots.get(robot);
+
+            Percurso p = this.mapa.calculaPercurso(r.getLoc(), /* origem */
+                    this.paletes.get(palete).getLoc()); /* destino */
+
+            r.setDisponivel(false);
+            r.setPalete(palete);
+            r.setPercuso(p.clone());
+            r.movimenta();
+
+            return robot;
+        }
+        return null;
+    }
 
     public String iniciaTransportePalete() {
-        if (this.robot.getDisponivel()) {
-            String palete = this.paletesAtransportar.remove();
-            Percurso p = this.mapa.calculaPercurso(this.robot.getLoc(), this.paletes.get(palete).getLoc());
+        String robot = this.verificaDisponibilidadeRobot();
 
-            this.robot.setDisponivel(false);
-            this.robot.setPalete(palete);
-            this.robot.setPercuso(p);
-            this.robot.movimenta();
+        if (robot!=null) {
+
+            String palete = this.paletesAtransportar.remove();
+
+            this.paletes.get(palete).setEmTransporte(true);
+
             return palete;
         }
         return null;
     }
 
 
-    public int transportaPalete(String palete) {
-        if (this.robot.getPalete()==null) return -1;
+    public int transportaPalete(String robot) {
+        Robot robo = this.robots.get(robot);
 
-        if (this.robot.getPalete().equals(palete)) {
+        String palete = robo.getPalete();
+        int r = 0;
 
-            String codigo = this.mapa.procuraPrateleira();
+        if (palete == null) r = -1;
+
+        else {
+
+            float altura = this.paletes.get(palete).getAltura();
+
+            String codigo = this.mapa.procuraPrateleira(altura);
+
+            if (codigo == null) {
+                robo.setDisponivel(true);
+                return -2;
+            }
 
             Localizacao dest = this.mapa.reservaPrateleiraPorCodigo(codigo);
 
-            Percurso p = this.mapa.calculaPercurso(this.robot.getLoc(),dest);
+            Localizacao loc = robo.getLoc();
+
+            Percurso p = this.mapa.calculaPercurso(loc,dest);
 
             Palete pal = this.paletes.get(palete);
 
-            if (pal!=null) {
-                this.paletes.get(palete).setLoc(this.robot.getLoc());
-                this.robot.setPercuso(p);
-                this.robot.movimenta();
-                return 1;
+            if (pal != null) {
+                this.paletes.get(palete).setLoc(loc);
+                robo.setPercuso(p);
+                robo.movimenta();
+                robo.setRecolheuPalete(true);
+                r = 1;
             }
         }
-        return 0;
+        return r;
     }
 
-    public int concluiTransportePalete(String palete) {
-        if (this.robot.getPalete()==null) return -1;
+    public int concluiTransportePalete(String robot) {
+        Robot robo = this.robots.get(robot);
 
-        if (this.robot.getPalete().equals(palete)) {
-            Palete p = this.paletes.get(palete);
-            p.setLoc(this.robot.getLoc());
-            p.setDisponivel(true);
-            this.robot.setDisponivel(true);
+        String palete = robo.getPalete();
+
+        if (palete == null || !robo.getRecolheuPalete()) return -1;
+
+        else {
+            this.paletes.get(palete).setTransporteConcluido(robo.getLoc());
+
+            robo.setDisponivel(true);
+            robo.setPalete(null);
+            robo.setRecolheuPalete(false);
+
             return 1;
         }
-        return 0;
     }
 
     public void leitorRegisto(String codigo,float altura) {
+
         Palete p = this.leitor.regista(codigo,altura);
-        this.paletes.put(p.getCodigo(),p);
-        this.paletesAtransportar.add(p.getCodigo());
+
+        this.paletes.put(codigo,p.clone());
+        this.paletesAtransportar.add(codigo);
     }
 
     public void mostra() {
-        for (Palete p : this.paletes.values()) {
-            System.out.println(p.toString());
-        }
+        this.paletes.values().forEach(p-> System.out.println(p.toString()));
     }
 
+
     public void mostraRobot() {
-        System.out.println(this.robot.toString());
+        this.robots.values().forEach(r -> System.out.println(r.toString()));
     }
 }

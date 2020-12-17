@@ -5,7 +5,7 @@ public class Main {
         try {
             new TextUi().run();
         } catch (Exception e) {
-            System.out.println("Erro ao arrancar!");
+            System.out.println("Erro de iniciação!");
         }
     }
 }

@@ -8,7 +8,7 @@ public class CorredorSemArmazenamento extends Localizacao {
 
     @Override
     public String toString() {
-        return "Numero: "+this.getNumero();
+        return "Número: " + this.getNumero();
     }
 
 

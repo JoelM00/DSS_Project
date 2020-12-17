@@ -13,18 +13,25 @@ public class Posicao extends Localizacao {
         this.seccao = s;
     }
 
+    public Posicao(Posicao p) {
+        super(p.getNumero());
+        this.seccao = p.getSeccao();
+    }
+
     public int getSeccao() {
         return seccao;
     }
-
-    public void setSeccao(int seccao) {
-        this.seccao = seccao;
-    }
+    public Posicao clone() {return new Posicao(this); }
 
     @Override
     public String toString() {
-        return "Numero: "+this.getNumero()+"Posicao{" +
-                "seccao=" + seccao +
-                '}';
+        return "Número: " + this.getNumero() + " Posição { "
+                + "secção = " + seccao + '}';
+    }
+
+    /* MÉTODOS NÃO USADOS MAS QUE PODEM (OU NÃO) FAZER FALTA */
+
+    public void setSeccao(int seccao) {
+        this.seccao = seccao;
     }
 }
