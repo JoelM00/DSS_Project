@@ -10,25 +10,24 @@ public interface IGestArmazemFacade {
 
     void leitorRegisto(String codigo, float altura);
 
-    String iniciaTransportePalete();
-
     public String iniciaTransporteRobot(String palete);
 
-    int transportaPalete(String codigo);
+    public String iniciaTransportePalete();
 
-    int concluiTransportePalete(String codigo);
+    public int transportaPalete(String robot);
 
-    boolean existemPaletesAtransportar();
+    public int concluiTransportePalete(String robot);
 
-    String verificaDisponibilidadeRobot();
-
-    void mostra();
-
-    void mostraRobot();
+    public String verificaDisponibilidadeRobot();
 
     public boolean existeAlgumRobotIndisponivel();
 
     public boolean existeRobot(String codigo);
 
-    public boolean existemPaletesATransportar();
+    public boolean existemPaletesAtransportar();
+
+    void mostra();
+
+    void mostraRobot();
+
 }

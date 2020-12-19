@@ -4,19 +4,16 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 
 public class ConfigDAO {
-    protected static final String USERNAME = "root";
-    protected static final String PASSWORD = "1234";
-    protected static final String DATABASE = "DSS";
-    protected static final String URL = "localhost";
+    static final String USERNAME = "root";
+    static final String PASSWORD = "1234";
+    private static final String DATABASE = "dss";
+    private static final String DRIVER = "jdbc:mysql";
+    static final String URL = DRIVER+"://localhost/dss?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=WET";
 
     static Connection connect() {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            return DriverManager.getConnection("jdbc:mysql://" + URL
-                    + "/" + DATABASE
-                    + "?user=" + USERNAME
-                    + "&password=" + PASSWORD
-                    + "&allowMultiQueries=true");
+            return DriverManager.getConnection(ConfigDAO.URL, ConfigDAO.USERNAME, ConfigDAO.PASSWORD);
         } catch (Exception e) {
             e.printStackTrace();
         }

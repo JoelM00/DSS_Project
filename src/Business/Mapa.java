@@ -3,9 +3,10 @@ package Business;
 import java.util.*;
 
 public class Mapa {
-    private Map<Integer,Localizacao> corredores;
-    private Map<Integer,Integer> mapaArmazenamento;
-    private Map<Integer,Integer> mapaRecolha;
+    private final Map<Integer,Localizacao> localizacao;
+    private final Map<Integer,Integer> mapaArmazenamento;
+    private final Map<Integer,Integer> mapaRecolha;
+    private final Map<String,Prateleira> prateleiras;
     private int totalPrateleiras;
 
     private void criaMapaArmazenamento() {
@@ -33,91 +34,79 @@ public class Mapa {
     }
 
 
-    private Map<String,Prateleira> criaPrateleiras(int x) {
-
-        Map<String,Prateleira> res = new HashMap<>();
-
+    private List<String> criaPrateleiras(int x) {
+        List<String> codigos = new ArrayList<>();
         for (int i = 0; i<x; i++) {
             String s = "P"+totalPrateleiras++;
-            res.put(s,new Prateleira(s,(i+1)*10,true));
+            codigos.add(s);
+            this.prateleiras.put(s,new Prateleira(s,(i+1)*10,true));
         }
-        return res;
+        return codigos;
     }
 
     private void criaCorredores() {
-        this.corredores.put(0,new Posicao(0,0));
-        this.corredores.put(1,new CorredorSemArmazenamento(1));
-        this.corredores.put(2,new CorredorSemArmazenamento(2));
-        this.corredores.put(3,new CorredorSemArmazenamento(3));
-        this.corredores.put(4,new CorredorComArmazenamento(4,criaPrateleiras(5)));
-        this.corredores.put(5,new CorredorComArmazenamento(5,criaPrateleiras(5)));
-        this.corredores.put(6,new CorredorComArmazenamento(6,criaPrateleiras(5)));
-        this.corredores.put(7,new CorredorSemArmazenamento(7));
-        this.corredores.put(8,new CorredorSemArmazenamento(8));
-        this.corredores.put(9,new CorredorSemArmazenamento(9));
-        this.corredores.put(10,new Posicao(10,0));
+        List<String> c1 = criaPrateleiras(5);
+        List<String> c2 = criaPrateleiras(5);
+        List<String> c3 = criaPrateleiras(5);
+        this.localizacao.put(0,new Posicao(0,0));
+        this.localizacao.put(1,new CorredorSemArmazenamento(1));
+        this.localizacao.put(2,new CorredorSemArmazenamento(2));
+        this.localizacao.put(3,new CorredorSemArmazenamento(3));
+        this.localizacao.put(4,new CorredorComArmazenamento(4,c1));
+        this.localizacao.put(5,new CorredorComArmazenamento(5,c2));
+        this.localizacao.put(6,new CorredorComArmazenamento(6,c3));
+        this.localizacao.put(7,new CorredorSemArmazenamento(7));
+        this.localizacao.put(8,new CorredorSemArmazenamento(8));
+        this.localizacao.put(9,new CorredorSemArmazenamento(9));
+        this.localizacao.put(10,new Posicao(10,0));
     }
 
     public Mapa() {
         this.mapaArmazenamento = new HashMap<>();
         this.mapaRecolha = new HashMap<>();
-        this.corredores = new HashMap<>();
+        this.localizacao = new HashMap<>();
+        this.prateleiras = new HashMap<>();
+        this.totalPrateleiras = 1;
         this.criaMapaArmazenamento();
         this.criaMapaRecolha();
         this.criaCorredores();
-        this.totalPrateleiras = 0;
     }
 
-    public List<Posicao> listagem() {
-
-        List<Posicao> res = new ArrayList<>();
-
-        for (Localizacao l : this.corredores.values())
-
-            if (l instanceof CorredorComArmazenamento) {
-                int numero = l.getNumero();
-                CorredorComArmazenamento c = (CorredorComArmazenamento) l;
-                Set<Integer> aux = c.listagem();
-
-                for (Integer x : aux)
-                    res.add(new Posicao(numero,x));
-            }
-
-        return res;
-    }
-
-    public Localizacao reservaPrateleiraPorCodigo(String codigo) {
-
-        for (Map.Entry<Integer,Localizacao> m : this.corredores.entrySet()) {
-            Localizacao l = m.getValue();
-
+    public Posicao procuraPorCodigo(String codigo) {
+        for (Localizacao l : this.localizacao.values()) {
             if (l instanceof CorredorComArmazenamento) {
                 CorredorComArmazenamento c = (CorredorComArmazenamento) l;
-
-                if (c.existePrateleira(codigo)) {
-                    int seccao = c.reservaPorCodigo(codigo);
-
-                    if (seccao != -1 && seccao != -2) {
-                        return new Posicao(m.getKey(), seccao);
-                    }
+                int x = c.posicao(codigo);
+                if (x != -1) {
+                    return new Posicao(l.getNumero(),x);
                 }
             }
         }
         return null;
     }
 
-    public String procuraPrateleira(float altura) {
+    public List<Posicao> listagem() {
+        List<Posicao> res = new ArrayList<>();
 
-        for (Localizacao l : this.corredores.values())
-
-            if (l instanceof CorredorComArmazenamento) {
-                CorredorComArmazenamento c = (CorredorComArmazenamento) l;
-                String codigo = c.algumaDisponivel(altura);
-
-                if (codigo!=null)
-                    return codigo;
+        for (Prateleira p : this.prateleiras.values())
+            if (!p.getDisponivel()) {
+                res.add(this.procuraPorCodigo(p.getCodigo()));
             }
 
+        return res;
+    }
+
+    public Localizacao reservaPrateleiraPorCodigo(String codigo) {
+        this.prateleiras.get(codigo).setDisponivel(false);
+        return this.procuraPorCodigo(codigo);
+    }
+
+    public String procuraPrateleira(float altura) {
+        for (Prateleira p : this.prateleiras.values()) {
+            if (p.getDisponivel() && (altura <= p.getAltura())) {
+                return p.getCodigo();
+            }
+        }
         return null;
     }
 

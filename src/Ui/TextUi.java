@@ -49,7 +49,7 @@ public class TextUi {
     public void gestorDoSistema() {
         Menu menu = new Menu(new String[] {"Preparar transporte de palete."});
 
-        menu.setPreCondicao(1, this.modelo::existemPaletesATransportar);
+        menu.setPreCondicao(1, this.modelo::existemPaletesAtransportar);
         menu.setHandler(1,this::trataPreparacao);
         menu.run();
     }

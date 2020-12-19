@@ -1,5 +1,7 @@
 package Business;
 
+import Data.PaleteDAO;
+
 import java.util.*;
 
 public class GestArmazemFacade implements IGestArmazemFacade {
@@ -39,19 +41,11 @@ public class GestArmazemFacade implements IGestArmazemFacade {
         return aux;
     }
 
-    public boolean existemPaletesAtransportar() {
-        return this.paletesAtransportar.size() > 0;
-    }
-
     public String algumRobotDisponivel() {
         for (Robot r : this.robots.values()) {
             if (r.getDisponivel()) return r.getCodigo();
         }
         return null;
-    }
-
-    public String verificaDisponibilidadeRobot() {
-        return this.algumRobotDisponivel();
     }
 
     public boolean existeAlgumRobotIndisponivel() {
@@ -61,12 +55,16 @@ public class GestArmazemFacade implements IGestArmazemFacade {
         return false;
     }
 
-    public boolean existeRobot(String codigo) {
-        return this.robots.get(codigo)!=null;
+    public boolean existemPaletesAtransportar() {
+        return this.paletesAtransportar.size() > 0;
     }
 
-    public boolean existemPaletesATransportar() {
-        return this.paletesAtransportar.size() > 0;
+    public String verificaDisponibilidadeRobot() {
+        return this.algumRobotDisponivel();
+    }
+
+    public boolean existeRobot(String codigo) {
+        return this.robots.get(codigo)!=null;
     }
 
     public String iniciaTransporteRobot(String palete) {

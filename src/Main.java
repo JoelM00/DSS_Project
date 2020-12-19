@@ -6,6 +6,7 @@ public class Main {
             new TextUi().run();
         } catch (Exception e) {
             System.out.println("Erro de iniciação!");
+            e.printStackTrace();
         }
     }
 }

@@ -10,6 +10,4 @@ public class CorredorSemArmazenamento extends Localizacao {
     public String toString() {
         return "Número: " + this.getNumero();
     }
-
-
 }

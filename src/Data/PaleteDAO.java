@@ -2,10 +2,18 @@ package Data;
 
 
 import Business.Palete;
+import Business.Localizacao;
+import Business.Posicao;
+import Business.Prateleira;
 
+import java.sql.*;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
-/*
+
+
 public class PaleteDAO implements Map<String, Palete> {
     private static PaleteDAO singleton = null;
 
@@ -14,16 +22,17 @@ public class PaleteDAO implements Map<String, Palete> {
         try {
             Statement stm = conn.createStatement();
 
-            String sql = "CREATE TABLE IF NOT EXISTS Paletes (" +
-                    "codPalete varchar(10) NOT NULL PRIMARY KEY," +
-                    "Estado bool DEFAULT," +
-                    "Altura int(4) DEFAULT 0)"+
-                    "Localizacao varchar(10), foreign key(Localizacao) references Localizacao(IdLocal))";;
-            stm.executeUpdate(sql);
-            sql = "CREATE TABLE IF NOT EXISTS Localizacao (" +
-                    "ID varchar(10) NOT NULL PRIMARY KEY," +
-                    "Corredor int(4) DEFAULT NOT NULL," +
-                    "Prateleira int(4) DEFAULT NOT NULL)" ;
+            String sql = "CREATE TABLE IF NOT EXISTS `Palete` (" +
+                    "  `Codigo` VARCHAR(45) NOT NULL," +
+                    "  `Estado` TINYINT NOT NULL," +
+                    "  `Estado_Transporte` TINYINT NOT NULL," +
+                    "  `Altura` INT(4) NOT NULL," +
+                    "  `Localizacao_Numero` INT NOT NULL," +
+                    "  PRIMARY KEY (`Codigo`)," +
+                    "  INDEX `fk_Palete_Localizacao1_idx` (`Localizacao_Numero` ASC) VISIBLE," +
+                    "  CONSTRAINT `fk_Palete_Localizacao1`" +
+                    "    FOREIGN KEY (`Localizacao_Numero`)" +
+                    "    REFERENCES `Localizacao` (`Numero`))";
             stm.executeUpdate(sql);
         } catch (Exception e) {
             throw new NullPointerException(e.getMessage());
@@ -33,14 +42,14 @@ public class PaleteDAO implements Map<String, Palete> {
     }
 
     public static PaleteDAO getInstance() {
-        if (PaleteDAO.getInstance()==null) {
+        if (PaleteDAO.singleton == null) {
             PaleteDAO.singleton = new PaleteDAO();
         }
         return PaleteDAO.singleton;
     }
 
     @Override
-    public int size() {
+    public int size() throws NullPointerException{
         Connection conn = ConfigDAO.connect();
         int i = 0;
         try {
@@ -66,13 +75,13 @@ public class PaleteDAO implements Map<String, Palete> {
     }
 
     @Override
-    public boolean containsKey(Object key) {
+    public boolean containsKey(Object key) throws NullPointerException{
         Connection conn = ConfigDAO.connect();
         boolean r;
         try {
             Statement stm = conn.createStatement();
             ResultSet rs =
-                    stm.executeQuery("SELECT codPalete FROM Paletes WHERE codPalete='"+key.toString()+"'");
+                    stm.executeQuery("SELECT Codigo FROM Palete WHERE Codigo='"+key.toString()+"'");
             r = rs.next();
         } catch (SQLException e) {
             // Database error!
@@ -81,30 +90,35 @@ public class PaleteDAO implements Map<String, Palete> {
         }
         return r;
     }
-    //falta comparar a localização
+
     @Override
     public boolean containsValue(Object value) {
         Palete p = (Palete) value;
         boolean r = false;
         Palete c = this.get(p.getCodigo());
         if (c!=null){
-            if((p.getDisponivel() == c.getDisponivel()))
-                r = p.getAltura() == c.getAltura();
+            if(p.getDisponivel() == c.getDisponivel())
+                if(p.getAltura() == c.getAltura())
+                    r = p.getLoc() == c.getLoc();
         }
         return r;
     }
 
     @Override
-    public Palete get(Object key) {
+    public Palete get(Object key) throws NullPointerException{
         Connection conn = ConfigDAO.connect();
         Palete p = null;
-        Localizacao loc = null;
+        Localizacao loc = new Posicao();
+        Prateleira ptl = null;
         try  {
             Statement stm = conn.createStatement();
-            ResultSet rs = stm.executeQuery("SELECT * FROM Paletes p WHERE codPalete='"+key.toString()+"' INNER JOIN Localizacao l  on p.Localizacao = l.ID");
+
+            ResultSet rs = stm.executeQuery("SELECT * FROM Palete as p " +
+                    "INNER JOIN Localizacao as l on p.Localizacao_Numero = l.Numero " +
+                    "WHERE p.Codigo = '"+key+"'");
             if (rs.next()) {  // A chave existe na tabela
-                loc = new Localizacao(rs.getInt("Corredor"), rs.getInt("Prateleira"));
-                p = new Palete(rs.getString("codPalete"), rs.getInt("Altura"), loc, rs.getBoolean("Estado"));
+                loc.setNumero(rs.getInt("Numero"));
+                p = new Palete(rs.getString("Codigo"), rs.getInt("Altura"), loc, rs.getBoolean("Estado"),rs.getBoolean("Estado_Transporte"));
             }
         } catch (SQLException e) {
             // Database error!
@@ -117,29 +131,41 @@ public class PaleteDAO implements Map<String, Palete> {
     }
 
     @Override
-    public Palete put(String key, Palete value) {
+    public Palete put(String key, Palete value) throws NullPointerException{
         Palete pl = null;
         String sql;
+        int estado;
+        if(value.getDisponivel()) estado = 1;
+        else estado=0;
+        int estadoT;
+        if(value.getEmTransporte()) estadoT = 1;
+        else estadoT=0;
         Connection conn = ConfigDAO.connect();
         try {
             Statement stm = conn.createStatement();
+
             if (this.containsKey(key)) {
-                stm.executeUpdate("UPDATE Paletes SET " +
-                        "Estado = '" + value.getDisponivel() +
+                stm.executeUpdate("UPDATE Palete SET " +
+                        "   Estado = '" + estado +
+                        "', Estado_Transporte = '" + value.getEmTransporte() +
                         "', Altura = '" + value.getAltura() +
-                        "'WHERE codPalete = '" + key + "'");
+                        "', Localizacao_Numero = '" + value.getLoc().getNumero() +
+                        "'WHERE Codigo = '" + key + "'");
                 return value;
-            }
-            else {
-                sql =
-                        "INSERT INTO Paletes (codPalete, Estado, Altura, Localizacao) VALUES" +
+
+            } else {
+
+                sql = "INSERT INTO Palete (Codigo, Estado, Estado_Transporte, Altura, Localizacao_Numero) VALUES" +
                                 " ('" + key + "'," +
-                                "'" + value.getDisponivel() +
-                                "'," + value.getAltura() +
-                                "'," + value.getLoc() + "')";
+                                "'" + estado +
+                                "','" + estadoT +
+                                "','" + value.getAltura() +
+                                "','" + value.getLoc().getNumero() + "')";
             }
+
             int i = stm.executeUpdate(sql);
-            return new Palete(value.getCodigo(), value.getAltura(), value.getLoc(), value.getDisponivel());
+
+            return new Palete(value.getCodigo(), value.getAltura(), value.getLoc(), value.getDisponivel(), value.getEmTransporte());
         } catch (Exception e) {
             throw new NullPointerException(e.getMessage());
         } finally {
@@ -148,12 +174,12 @@ public class PaleteDAO implements Map<String, Palete> {
     }
 
     @Override
-    public Palete remove(Object key) {
+    public Palete remove(Object key) throws NullPointerException{
         Connection conn = ConfigDAO.connect();
         try {
             Palete p = this.get(key);
             Statement stm = conn.createStatement();
-            String sql = "DELETE FROM Paletes WHERE (`codPalete` = " +
+            String sql = "DELETE FROM Palete WHERE (`Codigo` = " +
                     "'" + key + "');";
             int i = stm.executeUpdate(sql);
             return p;
@@ -174,7 +200,7 @@ public class PaleteDAO implements Map<String, Palete> {
         Connection conn = ConfigDAO.connect();
         try {
             Statement stm = conn.createStatement();
-            stm.executeUpdate("DELETE FROM Paletes");
+            stm.executeUpdate("DELETE FROM Palete");
         } catch (Exception e) {
             throw new NullPointerException(e.getMessage());
         } finally {
@@ -187,8 +213,8 @@ public class PaleteDAO implements Map<String, Palete> {
         Connection conn = ConfigDAO.connect();
         try {
             Statement stm = conn.createStatement();
-            ResultSet rs = stm.executeQuery("select distinct codPalete from" +
-                    " Paletes");
+            ResultSet rs = stm.executeQuery("select distinct Codigo from" +
+                    " Palete");
             Set<String> res = new HashSet<>();
             while (rs.next())
                 res.add(rs.getString(1));
@@ -213,4 +239,3 @@ public class PaleteDAO implements Map<String, Palete> {
         throw new NullPointerException("Not implemented!");
     }
 }
-*/
